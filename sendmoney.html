@@ -3,19 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Wallet | Enviar</title>
+  <title>Wallet | Enviar Dinero</title>
+
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/css/styles.css" rel="stylesheet">
 </head>
-<body onload="requireLogin(); renderContacts();">
+
+<body>
   <div class="container py-4" style="max-width: 720px;">
+
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h2 class="mb-0">Enviar Dinero</h2>
       <a class="btn btn-outline-secondary" href="menu.html">Volver</a>
     </div>
 
+    <!-- Buscar / Agenda -->
     <div class="card p-4 mb-3">
-      <form class="row g-2" onsubmit="handleSearchContact(event)">
+      <form id="searchForm" class="row g-2">
         <div class="col-8">
           <input id="searchQuery" class="form-control" placeholder="Buscar en agenda (nombre o email)">
         </div>
@@ -32,14 +38,18 @@
 
       <hr class="my-3">
 
-      <div id="contactResults"></div>
+      <!-- Resultados -->
+      <div id="contactResults" class="list-group"></div>
     </div>
 
+    <!-- Envío -->
     <div class="card p-4">
-      <form onsubmit="handleSendMoney(event)">
+      <div id="alert-container"></div>
+
+      <form id="sendMoneyForm">
         <div class="mb-3">
           <label class="form-label">Contacto seleccionado</label>
-          <input id="selectedContact" class="form-control" placeholder="Elige un contacto arriba" readonly>
+          <input id="selectedContact" class="form-control" placeholder="Selecciona un contacto" readonly>
         </div>
 
         <div class="mb-3">
@@ -47,40 +57,137 @@
           <input id="sendAmount" type="number" class="form-control" min="1" placeholder="Ej: 5000" required>
         </div>
 
-        <button class="btn btn-danger w-100" type="submit">Enviar Dinero</button>
+        <button id="btnSend" class="btn btn-danger w-100 d-none" type="submit">
+          Enviar Dinero
+        </button>
       </form>
     </div>
   </div>
 
-  <!-- Modal: Add Contact -->
-  <div class="modal fade" id="addContactModal" tabindex="-1" aria-hidden="true">
+  <!-- Modal: Agregar contacto -->
+  <div class="modal fade" id="addContactModal" tabindex="-1">
     <div class="modal-dialog">
-      <div class="modal-content" style="border-radius: 16px;">
+      <div class="modal-content rounded-4">
         <div class="modal-header">
           <h5 class="modal-title">Nuevo contacto</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+
         <div class="modal-body">
-          <form id="addContactForm" onsubmit="handleAddContact(event)">
+          <form id="addContactForm">
             <div class="mb-3">
               <label class="form-label">Nombre</label>
-              <input id="newName" class="form-control" placeholder="Ej: Juan Pérez" required>
+              <input id="newName" class="form-control" required>
             </div>
             <div class="mb-3">
               <label class="form-label">Email</label>
-              <input id="newEmail" type="email" class="form-control" placeholder="juan@email.com" required>
+              <input id="newEmail" type="email" class="form-control" required>
             </div>
             <button class="btn btn-success w-100" type="submit">Guardar contacto</button>
           </form>
         </div>
+
         <div class="modal-footer">
-          <button class="btn btn-outline-secondary" data-bs-dismiss="modal" type="button">Cerrar</button>
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="assets/js/app.js"></script>
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- App JS -->
+  <script src="assets/js/app.js"></script>
+
+  <!-- Lógica específica -->
+  <script>
+    let contactos = JSON.parse(localStorage.getItem('contactos')) || [
+      { nombre: 'Juan Pérez', email: 'juan@email.com' },
+      { nombre: 'María Soto', email: 'maria@email.com' }
+    ];
+
+    let contactoSeleccionado = null;
+
+    function renderContactos(lista) {
+      $('#contactResults').empty();
+
+      lista.forEach((c, index) => {
+        $('#contactResults').append(`
+          <button class="list-group-item list-group-item-action contacto" data-index="${index}">
+            ${c.nombre} – ${c.email}
+          </button>
+        `);
+      });
+    }
+
+    renderContactos(contactos);
+
+    // Buscar contactos
+    $('#searchForm').submit(function (e) {
+      e.preventDefault();
+      const q = $('#searchQuery').val().toLowerCase();
+      const filtrados = contactos.filter(c =>
+        c.nombre.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
+      );
+      renderContactos(filtrados);
+    });
+
+    // Seleccionar contacto
+    $(document).on('click', '.contacto', function () {
+      $('.contacto').removeClass('active');
+      $(this).addClass('active');
+
+      contactoSeleccionado = contactos[$(this).data('index')];
+      $('#selectedContact').val(`${contactoSeleccionado.nombre} (${contactoSeleccionado.email})`);
+      $('#btnSend').removeClass('d-none');
+    });
+
+    // Enviar dinero
+    $('#sendMoneyForm').submit(function (e) {
+      e.preventDefault();
+
+      const monto = parseInt($('#sendAmount').val());
+      let saldo = parseInt(localStorage.getItem('saldo')) || 1000;
+
+      if (!contactoSeleccionado || monto <= 0 || monto > saldo) {
+        mostrarAlerta('Datos inválidos o saldo insuficiente', 'danger');
+        return;
+      }
+
+      saldo -= monto;
+      localStorage.setItem('saldo', saldo);
+
+      mostrarAlerta(`Envío realizado con éxito a ${contactoSeleccionado.nombre}`, 'success');
+
+      setTimeout(() => window.location.href = 'menu.html', 2000);
+    });
+
+    // Agregar contacto
+    $('#addContactForm').submit(function (e) {
+      e.preventDefault();
+
+      const nuevo = {
+        nombre: $('#newName').val(),
+        email: $('#newEmail').val()
+      };
+
+      contactos.push(nuevo);
+      localStorage.setItem('contactos', JSON.stringify(contactos));
+      renderContactos(contactos);
+
+      $('#addContactModal').modal('hide');
+      this.reset();
+    });
+
+    function mostrarAlerta(msg, tipo) {
+      $('#alert-container').html(`
+        <div class="alert alert-${tipo} mt-3">${msg}</div>
+      `);
+    }
+  </script>
 </body>
 </html>
