@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wallet | Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/css/styles.css" rel="stylesheet">
+</head>
+<body>
+  <div class="page-wrap">
+    <div class="card p-4" style="max-width: 420px; width: 100%;">
+      <div class="brand-badge mb-3">
+        <span class="brand-dot"></span>
+        <span class="fw-bold">Billetera Digital</span>
+      </div>
+
+      <h2 class="mb-3">Inicio de sesión</h2>
+
+      <form onsubmit="handleLogin(event)">
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input id="email" type="email" class="form-control" placeholder="tuemail@algo.com" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Contraseña</label>
+          <input id="password" type="password" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <button class="btn btn-primary w-100" type="submit">Iniciar sesión</button>
+        <p class="text-muted small mt-3 mb-0">Demo: cualquier email/contraseña funciona.</p>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
