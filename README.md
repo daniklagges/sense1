@@ -1,4 +1,5 @@
-# sense1
+https://github.com/daniklagges/sense1
+
 💳 Billetera Digital – Proyecto Frontend
 
 Mini aplicación web de billetera digital desarrollada con HTML, CSS, Bootstrap y JavaScript, orientada a simular el flujo básico de una wallet: inicio de sesión, visualización de saldo, depósitos, envío de dinero y revisión de movimientos.
